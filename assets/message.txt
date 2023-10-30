@@ -1,3 +1,1 @@
-This is an example message
-
-Here you can write the message you want to send in bulk
+Hello {1}, this is a test message from The GoodCo to talk about your {2}
