@@ -1,4 +1,4 @@
-# Manual
+# Instructions for use
 ## How to personalise the message?
 To do that, go to `assets/message.txt` and edit the message placeholder.
 The message may contain variables extracted from each line of the message data. These variables can be accessed by indexing them from the message_data.csv file beginning from 0 up to the total number of variables present. For comprehensive understanding, refer to the placeholder file and its implementation.
