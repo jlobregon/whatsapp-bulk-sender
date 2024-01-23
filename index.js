@@ -12,12 +12,13 @@ function fillTemplate(message, args) {
 }
 
 (async () => {
+    // reading of the message template and the data for the executions
     const message = readFileSync('./assets/message.txt', { encoding: 'utf-8' });
     const message_data = readFileSync('./assets/message_data.csv', { encoding: 'utf-8' })
         .split('\n')
         .map(line => line.split(';'))
         .map(data => { return { number: data[0].trim(), args: data.slice(1) } });
-
+    // creating and opening the browser
     const browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null,
@@ -28,13 +29,22 @@ function fillTemplate(message, args) {
     await input('Once logged into WhatsApp press Enter to continue.');
     console.info('The bulk sending of messages will start, please supervise the process. If anything goes wrong, press Ctrl+C.')
     for ({ number, args } of message_data) {
-        console.log('Sending message to ' + number);
+        if (number.length <= 3) continue;
+        console.info(`Sending message to ${number}`);
         await page.goto(encodeURI(`${WHATSAPP_PAGE_URL}/send?phone=${number}&text=${fillTemplate(message, args)}`));
         await page.waitForNavigation();
         await wait(5000);
-        await page.click(config.selector);
-        await wait(1000)
-        console.log('Message successfully sent to the number ' + number);
+        await page.waitForSelector(config.selector, { timeout: 60000 })
+            .then(async () => {
+                await page.click(config.selector);
+            })
+            .then(() => console.info(`Message successfully sent to the number ${number}.`))
+            .catch(error => {
+                console.warn(`An error occurred while trying to send the message to ${number}. Please try again later.\nError information: ${error}`)
+            }).finally(async () => {
+                await wait(1000);
+            });
     }
+    console.info('The process is complete and your browser will close.')
     browser.close();
 })();
