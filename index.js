@@ -30,21 +30,27 @@ function fillTemplate(message, args) {
     console.info('The bulk sending of messages will start, please supervise the process. If anything goes wrong, press Ctrl+C.')
     for ({ number, args } of message_data) {
         if (number.length <= 3) continue;
-        console.info(`Sending message to ${number}`);
-        await page.goto(encodeURI(`${WHATSAPP_PAGE_URL}/send?phone=${number}&text=${fillTemplate(message, args)}`));
-        await page.waitForNavigation();
-        await wait(5000);
-        await page.waitForSelector(config.selector, { timeout: 60000 })
-            .then(async () => {
-                await page.click(config.selector);
-            })
-            .then(() => console.info(`Message successfully sent to the number ${number}.`))
-            .catch(error => {
-                console.warn(`An error occurred while trying to send the message to ${number}. Please try again later.\nError information: ${error}`)
-            }).finally(async () => {
-                await wait(1000);
-            });
+
+        let sanitized_number = number.replaceAll(/[- a-bA-B]/g, "");
+
+        console.info(`Sending message to ${sanitized_number}`);
+        try {
+            await page.goto(encodeURI(`${WHATSAPP_PAGE_URL}/send?phone=${sanitized_number}&text=${fillTemplate(message, args)}`));
+            await page.waitForNavigation();
+            await wait(5000);
+            await page.waitForSelector(config.selector, { timeout: 35000 })// depends on your internet connection. if you have a bad internet connection, increase this number to 60000
+                .then(async () => {
+                    await page.click(config.selector);
+                })
+                .then(() => console.info(`Message successfully sent to the number ${sanitized_number}.`))
+                .catch(error => {
+                    console.warn(`An error occurred while trying to send the message to ${sanitized_number}. Please try again later.\nError information: ${error}`);
+                });
+            await wait(1000);
+        } catch (error) {
+            console.error(error);
+        }
     }
-    console.info('The process is complete and your browser will close.')
+    console.info('The process is complete. The browser will close.')
     browser.close();
 })();
